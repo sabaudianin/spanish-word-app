@@ -27,13 +27,28 @@ export function ensureProgress(
   cardId: string,
   now: number,
 ): ProgressStore {
-  if (!progress[cardId]) return progress;
+  const existing = progress[cardId];
 
   const init: CardProgress = {
     ES_PL: makeInitialState("ES_PL", now),
     PL_ES: makeInitialState("PL_ES", now),
   };
-  return { ...progress, [cardId]: init };
+
+  // 1) brak wpisu → dodaj
+  if (!existing) {
+    return { ...progress, [cardId]: init };
+  }
+
+  // 2) wpis jest, ale brakuje kierunków → uzupełnij
+  const fixed: CardProgress = {
+    ES_PL: existing.ES_PL ?? init.ES_PL,
+    PL_ES: existing.PL_ES ?? init.PL_ES,
+  };
+
+  // jeśli już kompletne → zwróć bez zmian
+  if (existing.ES_PL && existing.PL_ES) return progress;
+
+  return { ...progress, [cardId]: fixed };
 }
 
 export function loadProgress(): ProgressStore {
